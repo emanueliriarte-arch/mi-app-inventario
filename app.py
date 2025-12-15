@@ -5,7 +5,6 @@ from datetime import date
 
 # Nombre de la base de datos.
 DB_NAME = 'inventario_final.db' 
-# NOTA: Cambié el nombre del archivo DB para forzar la creación de la tabla con la nueva estructura (sin 'precio').
 
 # --- Funciones de la Base de Datos ---
 
@@ -32,7 +31,6 @@ def init_db(conn):
 def add_product(conn, nombre, cantidad, unidad_medida, fecha_caducidad):
     """Inserta un nuevo producto con los cuatro detalles solicitados."""
     c = conn.cursor()
-    # Ejecutamos la inserción con los cuatro campos
     c.execute("INSERT INTO productos (nombre, cantidad, unidad_medida, fecha_caducidad) VALUES (?, ?, ?, ?)", 
               (nombre, cantidad, unidad_medida, fecha_caducidad))
     conn.commit()
@@ -51,10 +49,36 @@ init_db(conn)
 st.title("Gestión de Inventario (Streamlit + SQLite)")
 st.caption(f"Base de datos SQLite: {DB_NAME}")
 
-# 2. Formulario para Añadir Productos (Interfaz Streamlit)
+# =================================================================
+# LÓGICA DE CADUCIDAD (FUERA DEL FORMULARIO PARA QUE FUNCIONE LA INTERACTIVIDAD)
+# =================================================================
+
 st.header("Añadir Nuevo Producto")
 
-# Usamos st.form para agrupar los inputs
+# 1. Pregunta condicional (DEBE ESTAR FUERA DEL FORM)
+col1, col2 = st.columns([1, 3])
+with col1:
+    tiene_caducidad = st.radio(
+        "¿Tiene fecha de caducidad?",
+        ("No", "Sí"),
+        index=0 
+    )
+
+fecha_str = None
+# 2. El campo de fecha SOLO se muestra si el usuario selecciona "Sí"
+if tiene_caducidad == "Sí":
+    with col2:
+        fecha_caducidad_valor = st.date_input(
+            "Selecciona la Fecha de Caducidad:",
+            min_value=date.today()
+        )
+    fecha_str = str(fecha_caducidad_valor)
+
+
+# =================================================================
+# FORMULARIO (SOLO CONTIENE LOS CAMPOS Y EL BOTÓN DE SUBMIT)
+# =================================================================
+
 with st.form("add_product_form"):
     
     # Campo 1: Nombre del producto
@@ -69,37 +93,16 @@ with st.form("add_product_form"):
         ("Unitario", "Kg", "Gramo", "Ml")
     )
     
-    # Campo 4: Lógica de Fecha de Caducidad
-    tiene_caducidad = st.radio(
-        "¿Tiene fecha de caducidad?",
-        ("No", "Sí"),
-        index=0 # Por defecto, selecciona "No"
-    )
-    
-    fecha_caducidad_valor = None # Inicializa como nulo
-    fecha_str = None # Valor que se guardará en la base de datos
-
-    # El campo de fecha SOLO se muestra si el usuario selecciona "Sí"
-    if tiene_caducidad == "Sí":
-        # Usamos st.date_input para pedir la fecha
-        fecha_caducidad_valor = st.date_input(
-            "Selecciona la Fecha de Caducidad:",
-            min_value=date.today()
-        )
-        # Convertimos a string para guardar en la DB si hay valor
-        fecha_str = str(fecha_caducidad_valor)
-
-    
     # Botón de Submit
     submitted = st.form_submit_button("Guardar Producto")
 
     if submitted:
         if nombre:
             try:
-                # La fecha_str será None si no tiene caducidad, cumpliendo la lógica
+                # Usamos la variable fecha_str que fue definida afuera
                 add_product(conn, nombre, cantidad, unidad, fecha_str)
                 st.success(f"Producto '{nombre}' añadido con éxito.")
-                st.experimental_rerun() # Refresca la tabla después de guardar
+                st.experimental_rerun()
             except Exception as e:
                 st.error(f"Error al guardar: {e}")
         else:
@@ -112,5 +115,4 @@ productos_df = view_all_products(conn)
 if productos_df.empty:
     st.info("El inventario está vacío. Añade un producto arriba.")
 else:
-    # Muestra los datos en una tabla interactiva de Streamlit
     st.dataframe(productos_df, use_container_width=True)
