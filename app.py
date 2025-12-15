@@ -2,9 +2,9 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 
-# Nombre de la base de datos.
-# Cambiado a V7 para asegurar que se cree un archivo limpio en el servidor.
-DB_NAME = 'inventario_final_v7.db' 
+# Nombre de la base de datos. 
+# Usamos un nombre nuevo (v8) para garantizar un despliegue limpio y estable.
+DB_NAME = 'inventario_final_v8.db' 
 
 # --- Funciones de la Base de Datos ---
 
@@ -17,14 +17,14 @@ def get_connection():
 def init_db(conn):
     """
     Inicializa la tabla de productos.
-    Usamos DROP TABLE para asegurar que la estructura sea la correcta (nombre, cantidad, unidad_medida).
+    Usamos DROP TABLE para asegurar que la estructura sea la correcta (3 campos).
     """
     c = conn.cursor()
     
     # 1. ELIMINAR la tabla vieja (si existe) para evitar conflictos de estructura.
     c.execute('DROP TABLE IF EXISTS productos')
     
-    # 2. CREAR la tabla con la estructura limpia y correcta.
+    # 2. CREAR la tabla con la estructura limpia y correcta (nombre, cantidad, unidad_medida).
     c.execute('''
         CREATE TABLE IF NOT EXISTS productos (
             id INTEGER PRIMARY KEY,
@@ -86,7 +86,7 @@ with st.form("add_product_form"):
                 add_product(conn, nombre, cantidad, unidad)
                 st.success(f"Producto '{nombre}' añadido con éxito.")
                 
-                # ¡¡¡CORRECCIÓN DE ERROR!!! Usamos la función actualizada
+                # ¡CORRECCIÓN FINAL! Ahora usa el nombre estable y actual de la función.
                 st.rerun() 
                 
             except Exception as e:
