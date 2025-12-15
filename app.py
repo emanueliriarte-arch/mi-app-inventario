@@ -3,8 +3,8 @@ import sqlite3
 import pandas as pd
 
 # Nombre de la base de datos.
-# CAMBIAMOS EL NOMBRE PARA FORZAR LA ELIMINACIÓN DE LA COLUMNA 'fecha_caducidad'
-DB_NAME = 'inventario_sin_caducidad.db' 
+# Cambiamos el nombre una vez más para asegurar un nuevo archivo.
+DB_NAME = 'inventario_final_v6.db' 
 
 # --- Funciones de la Base de Datos ---
 
@@ -15,15 +15,22 @@ def get_connection():
     return conn
 
 def init_db(conn):
-    """Inicializa la tabla de productos con la estructura solicitada (3 campos)."""
+    """
+    Inicializa la tabla de productos.
+    Usamos DROP TABLE para asegurar que la estructura sea la correcta (nombre, cantidad, unidad_medida).
+    """
     c = conn.cursor()
+    
+    # 1. ELIMINAR la tabla vieja (si existe) para evitar conflictos de estructura.
+    c.execute('DROP TABLE IF EXISTS productos')
+    
+    # 2. CREAR la tabla con la estructura limpia y correcta.
     c.execute('''
         CREATE TABLE IF NOT EXISTS productos (
             id INTEGER PRIMARY KEY,
             nombre TEXT NOT NULL,
             cantidad INTEGER,
             unidad_medida TEXT       
-            -- Eliminada columna: fecha_caducidad
         )
     ''')
     conn.commit()
@@ -31,14 +38,12 @@ def init_db(conn):
 def add_product(conn, nombre, cantidad, unidad_medida):
     """Inserta un nuevo producto con los tres detalles solicitados."""
     c = conn.cursor()
-    # Ejecutamos la inserción con los TRES campos
     c.execute("INSERT INTO productos (nombre, cantidad, unidad_medida) VALUES (?, ?, ?)", 
               (nombre, cantidad, unidad_medida))
     conn.commit()
 
 def view_all_products(conn):
     """Recupera todos los productos y los devuelve como DataFrame."""
-    # La consulta solo pide los 4 campos existentes
     df = pd.read_sql_query("SELECT id, nombre, cantidad, unidad_medida FROM productos", conn)
     return df
 
@@ -53,7 +58,7 @@ st.caption(f"Base de datos SQLite: {DB_NAME}")
 
 
 # =================================================================
-# FORMULARIO SIMPLIFICADO
+# FORMULARIO
 # =================================================================
 
 st.header("Añadir Nuevo Producto")
@@ -78,12 +83,12 @@ with st.form("add_product_form"):
     if submitted:
         if nombre:
             try:
-                # Llamamos a la función con solo 3 argumentos
                 add_product(conn, nombre, cantidad, unidad)
                 st.success(f"Producto '{nombre}' añadido con éxito.")
                 st.experimental_rerun()
             except Exception as e:
-                st.error(f"Error al guardar: {e}")
+                # Muestra el error de Python en la web si falla (útil para depurar)
+                st.error(f"Error al guardar: {e}") 
         else:
             st.error("El nombre del producto no puede estar vacío.")
 
