@@ -3,7 +3,6 @@ import sqlite3
 import pandas as pd
 
 # Nombre de la base de datos.
-# Cambiamos el nombre una vez más para asegurar un nuevo archivo.
 DB_NAME = 'inventario_final_v6.db' 
 
 # --- Funciones de la Base de Datos ---
@@ -85,7 +84,10 @@ with st.form("add_product_form"):
             try:
                 add_product(conn, nombre, cantidad, unidad)
                 st.success(f"Producto '{nombre}' añadido con éxito.")
-                st.experimental_rerun()
+                
+                # ¡¡¡CORRECCIÓN AQUÍ!!!
+                st.rerun() # Usamos la función actualizada para recargar
+                
             except Exception as e:
                 # Muestra el error de Python en la web si falla (útil para depurar)
                 st.error(f"Error al guardar: {e}") 
