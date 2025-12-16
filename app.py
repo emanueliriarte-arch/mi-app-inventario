@@ -2,29 +2,24 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 
-# Nombre de la base de datos. 
-# Usamos un nombre nuevo (v8) para garantizar un despliegue limpio y estable.
-DB_NAME = 'inventario_final_v8.db' 
+# Nombre de la base de datos: usa un nombre estable.
+DB_NAME = 'inventario_final.db' 
 
 # --- Funciones de la Base de Datos ---
 
 @st.cache_resource
 def get_connection():
-    """Establece y devuelve la conexión a la base de datos."""
+    """Establece la conexión a la base de datos."""
     conn = sqlite3.connect(DB_NAME)
     return conn
 
 def init_db(conn):
-    """
-    Inicializa la tabla de productos.
-    Usamos DROP TABLE para asegurar que la estructura sea la correcta (3 campos).
-    """
+    """Inicializa la tabla de productos con la estructura final."""
     c = conn.cursor()
     
-    # 1. ELIMINAR la tabla vieja (si existe) para evitar conflictos de estructura.
+    # Esta línea asegura que la estructura de la tabla sea la correcta, borrando la vieja si existe.
     c.execute('DROP TABLE IF EXISTS productos')
     
-    # 2. CREAR la tabla con la estructura limpia y correcta (nombre, cantidad, unidad_medida).
     c.execute('''
         CREATE TABLE IF NOT EXISTS productos (
             id INTEGER PRIMARY KEY,
@@ -36,25 +31,23 @@ def init_db(conn):
     conn.commit()
 
 def add_product(conn, nombre, cantidad, unidad_medida):
-    """Inserta un nuevo producto con los tres detalles solicitados."""
+    """Inserta un nuevo producto."""
     c = conn.cursor()
     c.execute("INSERT INTO productos (nombre, cantidad, unidad_medida) VALUES (?, ?, ?)", 
               (nombre, cantidad, unidad_medida))
     conn.commit()
 
 def view_all_products(conn):
-    """Recupera todos los productos y los devuelve como DataFrame."""
+    """Recupera todos los productos."""
     df = pd.read_sql_query("SELECT id, nombre, cantidad, unidad_medida FROM productos", conn)
     return df
 
-# --- Configuración y Lógica de la Aplicación Streamlit ---
+# --- Configuración de la Aplicación Streamlit ---
 
-# 1. Conexión e Inicialización
 conn = get_connection()
 init_db(conn)
 
-st.title("Gestión de Inventario Simple (Streamlit + SQLite)")
-st.caption(f"Base de datos SQLite: {DB_NAME}")
+st.title("Gestión de Inventario Simple")
 
 
 # =================================================================
@@ -65,19 +58,14 @@ st.header("Añadir Nuevo Producto")
 
 with st.form("add_product_form"):
     
-    # Campo 1: Nombre del producto
     nombre = st.text_input("Nombre del Producto:")
-    
-    # Campo 2: Cantidad
     cantidad = st.number_input("Cantidad:", min_value=1, step=1)
     
-    # Campo 3: Unidad de Medida
     unidad = st.selectbox(
         "Unidad de Medida:",
         ("Unitario", "Kg", "Gramo", "Ml")
     )
     
-    # Botón de Submit
     submitted = st.form_submit_button("Guardar Producto")
 
     if submitted:
@@ -85,12 +73,8 @@ with st.form("add_product_form"):
             try:
                 add_product(conn, nombre, cantidad, unidad)
                 st.success(f"Producto '{nombre}' añadido con éxito.")
-                
-                # ¡CORRECCIÓN FINAL! Ahora usa el nombre estable y actual de la función.
                 st.rerun() 
-                
             except Exception as e:
-                # Muestra el error de Python en la web si falla (útil para depurar)
                 st.error(f"Error al guardar: {e}") 
         else:
             st.error("El nombre del producto no puede estar vacío.")
