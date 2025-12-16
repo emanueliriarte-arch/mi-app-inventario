@@ -2,8 +2,8 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 
-# Nombre de la base de datos.
-DB_NAME = 'inventario_final.db' 
+# Nombre de la base de datos. (¡MODIFICADO!)
+DB_NAME = 'inventario_final_v_clean.db' 
 
 # --- Funciones de la Base de Datos ---
 
