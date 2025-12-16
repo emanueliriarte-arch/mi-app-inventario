@@ -2,7 +2,7 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 
-# Nombre de la base de datos: usa un nombre estable.
+# Nombre de la base de datos.
 DB_NAME = 'inventario_final.db' 
 
 # --- Funciones de la Base de Datos ---
@@ -14,10 +14,10 @@ def get_connection():
     return conn
 
 def init_db(conn):
-    """Inicializa la tabla de productos con la estructura final."""
+    """Inicializa la tabla de productos."""
     c = conn.cursor()
     
-    # Esta línea asegura que la estructura de la tabla sea la correcta, borrando la vieja si existe.
+    # Asegura la estructura correcta eliminando la tabla vieja si existe.
     c.execute('DROP TABLE IF EXISTS productos')
     
     c.execute('''
